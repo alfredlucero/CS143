@@ -101,6 +101,8 @@
 
 				mysql_close($db_connection);	
 			?>
+			<hr>
+			<?php include("searchbar.php");?>
 		</div>
 		
 		<?php include("footer.php");?>

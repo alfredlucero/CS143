@@ -63,8 +63,8 @@
 
 					$insert_review_query = "INSERT INTO Review VALUES('" . $name . "', '" . $time . "', " . $mid . ", " . $rating . ", '" . $comment . "');";
 					
-					echo $insert_review_query."<br>";
-					echo $time;
+					//echo $insert_review_query."<br>";
+					//echo $time;
 
 					$insert_review_results = mysql_query($insert_review_query);
 
