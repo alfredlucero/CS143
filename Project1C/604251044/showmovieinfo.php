@@ -68,11 +68,13 @@
 					$role = $mactor_row[3];
 					echo '<a href="showactorinfo.php?id='.$aid.'">'.$afirst." ".$alast."</a> as \"".$role."\"<br>";
 				}
-
+				echo "<br /><br />";
+				echo "<hr>";
 				mysql_close($db_connection);	
 			?>
 		</div>
 		
+		<?php include("searchbar.php");?>
 		<?php include("footer.php");?>
 	</body>
 </html>

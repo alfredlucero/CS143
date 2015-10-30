@@ -44,13 +44,14 @@
 					$mid = $actedin_row[2];
 					echo "\"".$role."\"".' in <a href="showmovieinfo.php?id='.$mid.'">'.$title.'</a><br>';
 				}
-
+				echo "<br /><br />";
+				echo "<hr>";
 				mysql_close($db_connection);				
 			?>
 
 
 		</div>
-		
+		<?php include("searchbar.php");?>
 		<?php include("footer.php");?>
 	</body>
 </html>
