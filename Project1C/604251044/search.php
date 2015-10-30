@@ -57,11 +57,10 @@
 					$actor_count = 0;
 					echo "Searching for actors/actresses in the database: <br><br>";
 					while ($actor_row = mysql_fetch_row($actor_results)) {
-						$id = $actor_row[0];
+						$aid = $actor_row[0];
 						$last = $actor_row[1];
 						$first = $actor_row[2];
-						echo '<a href="showactorinfo.php?id='.$id.'">'.$first." ".$last.'</a><br>';
-						//<li><a href="addactordir.php">Add Actor/Director</a></li>
+						echo '<a href="showactorinfo.php?id='.$aid.'">'.$first." ".$last.'</a><br>';
 						$actor_count++;
 					}
 					echo "Displayed $actor_count actors based on the search keywords. <br><br>";
@@ -70,8 +69,9 @@
 					$movie_count = 0;
 					echo "Searching for movies in the database: <br><br>";
 					while ($movie_row = mysql_fetch_row($movie_results)) {
+						$mid = $movie_row[0];
 						$title = $movie_row[1];
-						echo "$title <br>";
+						echo '<a href="showmovieinfo.php?id='.$mid.'">'.$title.'</a><br>';
 						$movie_count++;
 					}
 					echo "Displayed $movie_count movies based on the search keywords.";
