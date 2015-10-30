@@ -21,6 +21,14 @@
 								 FROM MovieActor MA, Movie M, Actor A
 								 WHERE MA.mid = $id AND M.id = $id AND A.id = MA.aid;";
 
+				$avgreview_query = "SELECT rating
+									FROM Review
+									WHERE mid = $id;";
+
+				$review_query = "SELECT *
+								 FROM Review
+								 WHERE mid = $id;";	 
+
 				// Connect to CS143 database
 				$db_connection = mysql_connect("localhost", "cs143", "");
 				mysql_select_db("CS143", $db_connection);
@@ -30,6 +38,8 @@
 				$mdirector_results = mysql_query($mdirector_query, $db_connection);
 				$mgenre_results = mysql_query($mgenre_query, $db_connection);
 				$mactor_results = mysql_query($mactor_query, $db_connection);
+				$avgreview_results = mysql_query($avgreview_query, $db_connection);
+				$review_results = mysql_query($review_query, $db_connection);
 
 				while ($movie_row = mysql_fetch_row($movie_results)) {
 					$title = $movie_row[1];
@@ -68,13 +78,31 @@
 					$role = $mactor_row[3];
 					echo '<a href="showactorinfo.php?id='.$aid.'">'.$afirst." ".$alast."</a> as \"".$role."\"<br>";
 				}
-				echo "<br /><br />";
-				echo "<hr>";
+
+				echo "<br>-- User Reviews --<br><br>";
+
+				$avgreviewsum = 0;
+				while ($avgreview_row = mysql_fetch_row($avgreview_results)) {
+					$avgreviewsum += $avgreview_row[0];
+					$numreviews++;
+				}
+
+				echo "Average score: ".$avgreviewsum/$numreviews."/5 out of ".$numreviews." review(s).<br>";
+				echo "<a href=review.php> Add your own review </a>";
+
+				while ($review_row = mysql_fetch_row($review_results)) {
+					$name = $review_row[0];
+					$time = $review_row[1];
+					$rating = $review_row[3];
+					$comment = $review_row[4];
+					echo "<br><br>Posted on ".$time.". ".$name."'s rating: ".$rating."<br>".$comment."<br><br>";
+				}
+
+
 				mysql_close($db_connection);	
 			?>
 		</div>
 		
-		<?php include("searchbar.php");?>
 		<?php include("footer.php");?>
 	</body>
 </html>
