@@ -82,6 +82,7 @@
 				echo "<br>-- User Reviews --<br><br>";
 
 				$avgreviewsum = 0;
+				$numreviews = 0;
 				while ($avgreview_row = mysql_fetch_row($avgreview_results)) {
 					$avgreviewsum += $avgreview_row[0];
 					$numreviews++;
