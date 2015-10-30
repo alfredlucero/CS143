@@ -18,7 +18,7 @@
 					// Formulate compounded like clauses if necessary for MySQL queries
 					$name_like_clauses = ""; // if 0 keywords in search, display all of the names
 					if (count($keywords_array) == 1)
-						$name_like_clauses = "WHERE first OR last LIKE '%" . $keywords_array[0]. "%'";
+						$name_like_clauses = "WHERE first LIKE '%" . $keywords_array[0]. "%' OR last LIKE '%" . $keywords_array[0]. "%'";
 					else if (count($keywords_array) == 2)
 						$name_like_clauses = "WHERE (first LIKE '%". $keywords_array[0] . "%' AND last LIKE '%" . $keywords_array[1] . "%') OR 
 											  (first LIKE '%". $keywords_array[1] . "%' AND last LIKE '%" . $keywords_array[0] . "%')";
@@ -50,17 +50,18 @@
 							
 					// Run queries on database
 					$actor_results = mysql_query($actor_query, $db_connection);
-					$movie_results = mysql_query($movie_query, $db_connection);
-					$num_actor_fields = mysql_num_fields($actor_results);
-					$num_movie_fields = mysql_num_fields($movie_results);
+					$movie_results = mysql_query($movie_query, $db_connection);	
 					
+
 					// Output actor results
 					$actor_count = 0;
 					echo "Searching for actors/actresses in the database: <br><br>";
 					while ($actor_row = mysql_fetch_row($actor_results)) {
+						$id = $actor_row[0];
 						$last = $actor_row[1];
 						$first = $actor_row[2];
-						echo "$first $last <br>";
+						echo '<a href="showactorinfo.php?id='.$id.'">'.$first." ".$last.'</a><br>';
+						//<li><a href="addactordir.php">Add Actor/Director</a></li>
 						$actor_count++;
 					}
 					echo "Displayed $actor_count actors based on the search keywords. <br><br>";
