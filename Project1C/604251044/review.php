@@ -8,7 +8,7 @@
 				Movie:
 					   <?php
 							// Establish connection and choose CS143 database
-							$movie = "SELECT title FROM Movie ORDER BY title ASC;";
+							$movie = "SELECT title, id FROM Movie ORDER BY title ASC;";
 							$db_connection = mysql_connect("localhost", "cs143", "");
 							mysql_select_db("CS143", $db_connection);
 							
@@ -19,7 +19,8 @@
 							echo "<select name='movies'>";
 							while($row = mysql_fetch_row($results)) {
 								$field1 = $row[0];
-								echo "<option value='{$field1}'>{$field1}</option>";
+								$field2 = $row[1];
+								echo "<option value='$field2'>".$field1."</option>";
 							}
 							echo  "</select>";
 							mysql_close($db_connection);
@@ -40,9 +41,36 @@
 				<textarea name="comment" rows="10" cols="65"></textarea>
 				<br />
 				<input type="submit" name="AddReviewButton" value="AddReview"><br />
+				<hr>
 			</form>
+
 		</div>
-		
+		<?php
+			if ($_GET['AddReviewButton']) {
+				$db_connection = mysql_connect("localhost", "cs143", "");
+					mysql_select_db("CS143", $db_connection);
+
+					$name = $_GET['name'];
+					$mid = $_GET['movies'];
+					$rating = $_GET['rating'];
+					$comment = $_GET['comment'];
+
+					$time_query = "SELECT NOW();";
+					$time_results = mysql_query($time_query);
+
+					$time_row = mysql_fetch_row($time_results);
+					$time = $time_row[0];
+
+					$insert_review_query = "INSERT INTO Review VALUES('" . $name . "', '" . $time . "', " . $mid . ", " . $rating . ", '" . $comment . "');";
+					
+					echo $insert_review_query."<br>";
+					echo $time;
+
+					$insert_review_results = mysql_query($insert_review_query);
+
+					mysql_close($db_connection);
+				}
+			?>
 		<?php include("footer.php");?>
 	</body>
 </html>
