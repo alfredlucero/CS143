@@ -69,7 +69,8 @@
 						$id = $id_row[0];
 								
 						$insert_movie_query = "INSERT INTO Movie VALUES(" . $id . ", '" . $title . "', " . $year . ", '" . $rating . "', '" . $company . "');";
-						echo "$insert_movie_query<br />";
+						//Debugging
+						//echo "$insert_movie_query<br />";
 								
 						// Run query on database to insert into Movie and MovieGenre
 						$insert_movie_results = mysql_query($insert_movie_query);
