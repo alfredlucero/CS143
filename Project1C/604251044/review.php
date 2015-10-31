@@ -50,7 +50,11 @@
 				$db_connection = mysql_connect("localhost", "cs143", "");
 					mysql_select_db("CS143", $db_connection);
 
-					$name = $_GET['name'];
+					if ($_GET['name']) 
+						$name = $_GET['name'];
+					else
+						$name = "Anonymous";
+
 					$mid = $_GET['movies'];
 					$rating = $_GET['rating'];
 					$comment = $_GET['comment'];
@@ -63,11 +67,13 @@
 
 					$insert_review_query = "INSERT INTO Review VALUES('" . $name . "', '" . $time . "', " . $mid . ", " . $rating . ", '" . $comment . "');";
 					
+					//Debugging
 					//echo $insert_review_query."<br>";
 					//echo $time;
 
 					$insert_review_results = mysql_query($insert_review_query);
 
+					echo "<h2>Successfully added review!</h2>"; 
 					mysql_close($db_connection);
 				}
 			?>
