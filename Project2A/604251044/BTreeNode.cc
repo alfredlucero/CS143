@@ -1,4 +1,7 @@
 #include "BTreeNode.h"
+#include <iostream>
+#include <cstring>
+#include <cstdlib>
 
 using namespace std;
 
@@ -67,7 +70,7 @@ int BTLeafNode::getKeyCount()
 
 		// Increment key count for every valid key and iterate to next key-value pair
 		keyCount++;
-		tempBuffer += kvPairsize;
+		tempBuffer += kvPairSize;
 	}
 
 	return keyCount;
@@ -184,7 +187,7 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 		sibling.setNextNodePtr(getNextNodePtr());
 
 		// Clear second half of the original node's buffer up to the pid
-		memset(buffer + halfIndex, 0, PageFile::PAGE_SIZE - sizeof(PageId) - halfIndex);
+		memset(buffer + halfPos, 0, PageFile::PAGE_SIZE - sizeof(PageId) - halfPos);
 		m_numKeys = halfKeys;
 
 		// Check whether to insert the key-rid pair into the first half or the second half in the sibling
@@ -287,8 +290,8 @@ RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
 		char * tempBuffer = buffer;
 
 		// Copy key-RecordId pair data into function parameters
-		memcpy(&key, temp + offset, sizeof(int));
-		memcpy(&rid, temp + offset + sizeof(int), sizeof(RecordId));
+		memcpy(&key, tempBuffer + offset, sizeof(int));
+		memcpy(&rid, tempBuffer + offset + sizeof(int), sizeof(RecordId));
 
 		rc = 0;
 	}
@@ -401,7 +404,7 @@ int BTNonLeafNode::getKeyCount()
 
 		// Increment key count for every valid key and iterate to next key-value pair
 		keyCount++;
-		tempBuffer += kvPairsize;
+		tempBuffer += kvPairSize;
 	}
 
 	return keyCount;
@@ -417,7 +420,6 @@ int BTNonLeafNode::getKeyCount()
 RC BTNonLeafNode::insert(int key, PageId pid)
 { 
 	RC rc;
-	PageId nextNode = getNextNodePtr();
 	int kvPairSize = sizeof(int) + sizeof(PageId);
 	int maxKVPairs = 80;
 

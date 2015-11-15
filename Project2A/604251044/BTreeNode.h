@@ -121,7 +121,7 @@ class BTNonLeafNode {
   /**
 	* Constructor: initialize empty non-leaf node
 	*/
-   BTLeafNode();
+   BTNonLeafNode();
 
    /**
     * Insert a (key, pid) pair to the node.
