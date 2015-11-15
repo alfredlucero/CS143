@@ -17,7 +17,12 @@
  * BTLeafNode: The class representing a B+tree leaf node.
  */
 class BTLeafNode {
-  public:
+  public:  
+  /**
+	* Constructor: initialize empty leaf node  
+	*/
+	BTLeafNode();
+
    /**
     * Insert the (key, rid) pair to the node.
     * Remember that all keys inside a B+tree node should be kept sorted.
@@ -99,6 +104,7 @@ class BTLeafNode {
     RC write(PageId pid, PageFile& pf);
 
   private:
+	  int m_numKeys;
    /**
     * The main memory buffer for loading the content of the disk page 
     * that contains the node.
@@ -112,6 +118,11 @@ class BTLeafNode {
  */
 class BTNonLeafNode {
   public:
+  /**
+	* Constructor: initialize empty non-leaf node
+	*/
+   BTLeafNode();
+
    /**
     * Insert a (key, pid) pair to the node.
     * Remember that all keys inside a B+tree node should be kept sorted.
@@ -177,6 +188,7 @@ class BTNonLeafNode {
     RC write(PageId pid, PageFile& pf);
 
   private:
+	int m_numKeys;
    /**
     * The main memory buffer for loading the content of the disk page 
     * that contains the node.
