@@ -14,6 +14,7 @@
 #include <fstream>
 #include "Bruinbase.h"
 #include "SqlEngine.h"
+#include "BTreeNode.h"
 
 using namespace std;
 
@@ -24,6 +25,54 @@ int sqlparse(void);
 
 RC SqlEngine::run(FILE* commandline)
 {
+  // Debugging
+
+
+  // RecordId trid, trid2, trid3;
+  // trid.pid = 0;
+  // trid.sid = 0;
+  // trid2.pid = 0;
+  // trid2.sid = 1;
+  // trid3.pid = 0;
+  // trid3.sid = 2;
+
+   BTNonLeafNode test1 = BTNonLeafNode();
+   BTNonLeafNode test2 = BTNonLeafNode();
+  // test.insert(272, trid); //272,"Baby Take a Bow"
+  // //test.print();
+
+  // test.insert(216, trid2);
+  // test.insert(298, trid3);
+  // test.print();
+
+
+  PageId tpid1=0;
+  PageId tpid2=1;
+  RC rc;
+
+  for (int i = 0; i < 162; i+=2)
+  {
+    rc = test1.insert(i+100, tpid1);
+    if (rc < 0)
+    {   
+        int key;
+        // test.setNextNodePtr(trid2.pid);
+        // test2.setNextNodePtr();
+
+        test1.insertAndSplit(179, tpid1, test2, key);
+
+        cout << rc << endl;
+        cout << key << endl;
+    }
+  }
+
+  test1.print();
+  cout << endl;
+  test2.print();
+
+
+// Original run()
+/*
   fprintf(stdout, "Bruinbase> ");
 
   // set the command line input and start parsing user input
@@ -32,6 +81,7 @@ RC SqlEngine::run(FILE* commandline)
                // SqlParser.y by bison (bison is GNU equivalent of yacc)
 
   return 0;
+  */
 }
 
 RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
@@ -66,33 +116,33 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
       // compute the difference between the tuple value and the condition value
       switch (cond[i].attr) {
       case 1:
-	diff = key - atoi(cond[i].value);
-	break;
+  diff = key - atoi(cond[i].value);
+  break;
       case 2:
-	diff = strcmp(value.c_str(), cond[i].value);
-	break;
+  diff = strcmp(value.c_str(), cond[i].value);
+  break;
       }
 
       // skip the tuple if any condition is not met
       switch (cond[i].comp) {
       case SelCond::EQ:
-	if (diff != 0) goto next_tuple;
-	break;
+  if (diff != 0) goto next_tuple;
+  break;
       case SelCond::NE:
-	if (diff == 0) goto next_tuple;
-	break;
+  if (diff == 0) goto next_tuple;
+  break;
       case SelCond::GT:
-	if (diff <= 0) goto next_tuple;
-	break;
+  if (diff <= 0) goto next_tuple;
+  break;
       case SelCond::LT:
-	if (diff >= 0) goto next_tuple;
-	break;
+  if (diff >= 0) goto next_tuple;
+  break;
       case SelCond::GE:
-	if (diff < 0) goto next_tuple;
-	break;
+  if (diff < 0) goto next_tuple;
+  break;
       case SelCond::LE:
-	if (diff > 0) goto next_tuple;
-	break;
+  if (diff > 0) goto next_tuple;
+  break;
       }
     }
 
@@ -132,45 +182,45 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 {
-	/* your code here */
-	RecordFile rf;   // RecordFile containing the table
-	RecordId   rid;  // record cursor for table scanning
+  /* your code here */
+  RecordFile rf;   // RecordFile containing the table
+  RecordId   rid;  // record cursor for table scanning
 
-	RC     rc;
-	int    key;
-	string value;
-	string line;
-	int linecount = 1;
+  RC     rc;
+  int    key;
+  string value;
+  string line;
+  int linecount = 1;
 
-	// create the table file if it doesn't exist
-	if ((rc = rf.open(table + ".tbl", 'w')) < 0) {
-		fprintf(stderr, "Error: table %s does not exist\n", table.c_str());
-		return rc;
-	}
+  // create the table file if it doesn't exist
+  if ((rc = rf.open(table + ".tbl", 'w')) < 0) {
+    fprintf(stderr, "Error: table %s does not exist\n", table.c_str());
+    return rc;
+  }
 
-	// open the load file and parse line by line
-	// insert the tuples into the table file
-	ifstream infile(loadfile.c_str());
-	while (getline(infile, line))
-	{
-		if ((rc = parseLoadLine(line, key, value)) < 0)
-		{
-			fprintf(stderr, "Error: table %s could not parse line %d \n", table.c_str(), linecount);
-			return rc;
-		}
-		if ((rc = rf.append(key, value, rid)) < 0)
-		{
-			fprintf(stderr, "Error: table %s could not append line %d \n", table.c_str(), linecount);
-			return rc;
-		}
+  // open the load file and parse line by line
+  // insert the tuples into the table file
+  ifstream infile(loadfile.c_str());
+  while (getline(infile, line))
+  {
+    if ((rc = parseLoadLine(line, key, value)) < 0)
+    {
+      fprintf(stderr, "Error: table %s could not parse line %d \n", table.c_str(), linecount);
+      return rc;
+    }
+    if ((rc = rf.append(key, value, rid)) < 0)
+    {
+      fprintf(stderr, "Error: table %s could not append line %d \n", table.c_str(), linecount);
+      return rc;
+    }
 
-		linecount++;
+    linecount++;
 
-	}
+  }
 
-	infile.close();
-	rf.close();
-	return 0;
+  infile.close();
+  rf.close();
+  return 0;
 }
 
 RC SqlEngine::parseLoadLine(const string& line, int& key, string& value)
