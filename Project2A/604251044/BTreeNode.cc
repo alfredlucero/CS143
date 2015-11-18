@@ -117,7 +117,7 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 		// After finding the index location (idx) to insert the key-rid pair
 		// let's use another buffer to shift everything over
 		char * insertBuffer = (char *)malloc(PageFile::PAGE_SIZE);
-		memset(insertBuffer, 0, sizeof(insertBuffer));
+		memset(insertBuffer, 0, PageFile::PAGE_SIZE);
 		
 		// Make sure the insertBuffer has all the values up until the index insert location
 		memcpy(insertBuffer, buffer, idx);
@@ -135,6 +135,7 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 		// Deallocate the buffer that aided the insertion
 		memcpy(buffer, insertBuffer, PageFile::PAGE_SIZE);
 		free(insertBuffer);
+
 
 		m_numKeys++;
 		rc = 0;
@@ -174,6 +175,7 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 	{
 		// Clear sibling before adding the other half of the keys into it
 		memset(sibling.buffer, 0, sizeof(sibling.buffer));
+		cout << sibling.buffer << endl;
 
 		// Find the number of half keys and the position to split the the node in two
 		int halfKeys = ((int)((getKeyCount() + 1) / 2));
@@ -336,6 +338,26 @@ RC BTLeafNode::setNextNodePtr(PageId pid)
 	return rc;
 }
 
+void BTLeafNode::print()
+{
+	int kvPairSize = sizeof(int) + sizeof(RecordId);
+
+	char * tempBuffer = buffer;
+
+	for (int i = 0; i < getKeyCount()*kvPairSize; i += kvPairSize)
+	{
+		// Takes current key from buffer
+		int currKey;
+		memcpy(&currKey, tempBuffer, sizeof(int)); 
+
+		cout << currKey << " ";
+
+		// Advance to next key value pair
+		tempBuffer += kvPairSize;
+	}	
+
+	cout << "\n";
+}
 
 /**
 * Constructor: initialize empty non-leaf node
@@ -451,7 +473,7 @@ RC BTNonLeafNode::insert(int key, PageId pid)
 		// After finding the index location (idx) to insert the key-pid pair
 		// let's use another buffer to shift everything over
 		char * insertBuffer = (char *)malloc(PageFile::PAGE_SIZE);
-		memset(insertBuffer, 0, sizeof(insertBuffer));
+		memset(insertBuffer, 0, PageFile::PAGE_SIZE);
 
 		// Make sure the insertBuffer has all the values up until the index insert location
 		memcpy(insertBuffer, buffer, idx);
@@ -517,6 +539,10 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 		memcpy(&lastFHKey, buffer + halfPos - 8, sizeof(int));
 		memcpy(&firstSHKey, buffer + halfPos, sizeof(int));
 
+		cout << lastFHKey << endl;
+		cout << firstSHKey << endl;
+		print();
+
 		// First second half key is the middle key
 		if (key > firstSHKey)
 		{
@@ -525,7 +551,7 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 			// we will insert the sibling pid into the first four bytes and the second half key-pid pairs after
 			// Since we have 80 keys and 4 byte offset for initial pid, that fills up 644 Bytes maximum.
 			// We must do 1024 - 380(filler) - halfPos (up to 320) for number of bytes to copy - 8 for first key-pid pair in second half 
-			memcpy(sibling.buffer + 4, buffer + halfPos + 8, PageFile::PAGE_SIZE - 380 - halfPos - 8);
+			memcpy(sibling.buffer + 4, buffer + halfPos , PageFile::PAGE_SIZE - 380 - halfPos - 4);
 			sibling.m_numKeys = getKeyCount() - halfKeys - 1;
 
 			// Place value of first second half key into midKey
@@ -547,7 +573,7 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 			// Move everything on the right of the halfPos into the sibling buffer
 			// First four bytes are for first pid
 			// Number of bytes to copy: 1024 - 380(filler) - halfPos(up to 320)
-			memcpy(sibling.buffer + 4, buffer + halfPos, PageFile::PAGE_SIZE - 380 - halfPos);
+			memcpy(sibling.buffer + 4, buffer + halfPos, PageFile::PAGE_SIZE - 380 - halfPos - 4);
 			sibling.m_numKeys = getKeyCount() - halfKeys;
 
 			// Place value of the last key of the first half into midKey
@@ -569,7 +595,7 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 			// Move everything on the right side of the halfPos into the sibling buffer
 			// First four bytes are for first pid
 			// Number of bytes to copy: 1024 - 380(filler) - halfPos(up to 320)
-			memcpy(sibling.buffer + 4, buffer + halfPos, PageFile::PAGE_SIZE - 380 - halfPos);
+			memcpy(sibling.buffer + 4, buffer + halfPos, PageFile::PAGE_SIZE - 380 - halfPos - 4);
 			sibling.m_numKeys = getKeyCount() - halfKeys;
 
 			// Place value of key to insert into midKey
@@ -656,4 +682,25 @@ RC BTNonLeafNode::initializeRoot(PageId pid1, int key, PageId pid2)
 	rc = insert(key, pid2);
 
 	return rc;
+}
+
+void BTNonLeafNode::print()
+{
+	int kvPairSize = sizeof(int) + sizeof(PageId);
+
+	char * tempBuffer = buffer + 4;
+
+	for (int i = 4; i < getKeyCount()*kvPairSize; i += kvPairSize)
+	{
+		// Takes current key from buffer
+		int currKey;
+		memcpy(&currKey, tempBuffer, sizeof(int)); 
+
+		cout << currKey << " ";
+
+		// Advance to next key value pair
+		tempBuffer += kvPairSize;
+	}	
+
+	cout << "\n";
 }
