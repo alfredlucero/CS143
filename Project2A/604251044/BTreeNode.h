@@ -19,9 +19,9 @@
 class BTLeafNode {
   public:  
   /**
-	* Constructor: initialize empty leaf node  
-	*/
-	BTLeafNode();
+    * Constructor: initialize empty leaf node  
+    */
+    BTLeafNode();
 
    /**
     * Insert the (key, rid) pair to the node.
@@ -103,8 +103,12 @@ class BTLeafNode {
     */
     RC write(PageId pid, PageFile& pf);
 
+    void setBuffer
+
+    void print();
+
   private:
-	  int m_numKeys;
+      int m_numKeys;
    /**
     * The main memory buffer for loading the content of the disk page 
     * that contains the node.
@@ -119,8 +123,8 @@ class BTLeafNode {
 class BTNonLeafNode {
   public:
   /**
-	* Constructor: initialize empty non-leaf node
-	*/
+    * Constructor: initialize empty non-leaf node
+    */
    BTNonLeafNode();
 
    /**
@@ -187,8 +191,11 @@ class BTNonLeafNode {
     */
     RC write(PageId pid, PageFile& pf);
 
+    void print();
+
+
   private:
-	int m_numKeys;
+    int m_numKeys;
    /**
     * The main memory buffer for loading the content of the disk page 
     * that contains the node.
