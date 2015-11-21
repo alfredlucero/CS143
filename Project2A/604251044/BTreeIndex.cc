@@ -117,12 +117,219 @@ RC BTreeIndex::close()
  */
 RC BTreeIndex::insert(int key, const RecordId& rid)
 {
-    return 0;
+	RC rc;
+	
+	// Initialize a new tree from the root if it doesn't exist yet
+	if (treeHeight == 0)
+	{
+		// Insert key-rid pair into leaf node
+		BTLeafNode rootTree;
+		if ((rc = rootTree.insert(key, rid)) < 0)
+		{
+			fprintf(stderr, "Error: failed to insert into root leaf node");
+			return rc;
+		}
+		
+		// Set root to 1 if the file was just created; otherwise, set it to last pid available
+		// pid = 0 is used to store metadata about the treeHeight and rootPid
+		if (pf.endPid() == 0)
+			rootPid = 1;
+		else
+			rootPid = pf.endPid();
+
+		treeHeight++;
+
+		// Write the tree into the pid of the PageFile
+		if ((rc = rootTree.write(rootPid, pf)) < 0)
+		{
+			fprintf(stderr, "Error: failed to write new tree");
+		}
+
+		return rc;
+	}
+
+	// If the tree exists already, traverse it to find where to insert the key-rid pair
+	// Begin after the metadata page 0 -> pidStart = 1; heightStart = 1 from the root
+	int inKey;
+	PageId inPid;
+	if ((rc = insertPair(key, rid, rootPid, 1, inKey, inPid)) < 0)
+	{
+		fprintf(stderr, "Error: failed to insert pair into leaf node");
+	}
+
+	return rc;
 }
 
+RC BTreeIndex::insertPair(int key, const RecordId& rid, PageId curPid, int curHeight, int& inKey, PageId& inPid)
+{
+	RC rc;
+	inKey = -1;
+	inPid = -1;
+
+	// Recursively traverse through the B+ tree until you reach the max height
+	// At the max height we insert at the leaf node level
+	if (curHeight == treeHeight)
+	{
+		// Read page contents into the leaf node
+		BTLeafNode curLeaf;
+		if ((rc = curLeaf.read(curPid, pf)) < 0)
+		{
+			fprintf(stderr, "Error: failed to read contents into leaf node (rec)");
+			return rc;
+		}
+
+		// Attempt to insert into leaf node and write into the page file
+		if ((rc = curLeaf.insert(key, rid)) == 0)
+		{
+			if ((rc = curLeaf.write(curPid, pf)) < 0)
+			{
+				fprintf(stderr, "Error: failed to write into leaf node (rec)");
+				return rc;
+			}
+
+			return rc;
+		}
+
+		// Leaf overflow/insertion into leaf node unsuccessful, so try insertAndSplit algorithm
+		BTLeafNode splitLeaf;
+		int splitKey;
+		if ((rc = curLeaf.insertAndSplit(key, rid, splitLeaf, splitKey)) < 0)
+		{
+			fprintf(stderr, "Error: failed to insert and split the leaf node (rec)");
+			return rc;
+		}
+
+		// The splitKey (median key) must propagate up to the parent
+		// Set sibling pointers accordingly for splitLeaf and curLeaf
+		int endPid = pf.endPid();
+		inKey = splitKey;
+		inPid = endPid;
+		splitLeaf.setNextNodePtr(curLeaf.getNextNodePtr());
+		curLeaf.setNextNodePtr(endPid);
+
+		// Write the splitLeaf's contents into the last pid area
+		if ((rc = splitLeaf.write(endPid, pf)) < 0)
+		{
+			fprintf(stderr, "Error: failed to write split leaf's contents (rec)");
+			return rc;
+		}
+
+		// Re-write the curLeaf's modified contents into its pid
+		if ((rc = curLeaf.write(curPid, pf)) < 0)
+		{
+			fprintf(stderr, "Error: failed to re-write current leaf's contents (rec)");
+			return rc;
+		}
+
+		// Splitting a root requires a new non-leaf node 
+		// The splitLeaf/sibling's first value propagates up to the root
+		if (treeHeight == 1)
+		{
+			// Initialize the root with the splitKey (median key) pushed up
+			// It has two pid references to the split leaf nodes
+			BTNonLeafNode root;
+			root.initializeRoot(curPid, splitKey, endPid);
+			
+			// Write the root into the rootPid page
+			rootPid = pf.endPid();
+			if ((rc = root.write(rootPid, pf)) < 0)
+			{
+				fprintf(stderr, "Error: failed to write root contents (rec)");
+				return rc;
+			}
+			
+			treeHeight++;
+		}
+	}
+	else
+	{
+		// Let's continue to traverse down the B+ tree properly while we haven't reached leaf level
+		// Read nonLeaf node's contents into the page
+		BTNonLeafNode nonLeaf;
+		if ((rc = nonLeaf.read(curPid, pf)) < 0)
+		{
+			fprintf(stderr, "Error: failed to read nonleaf node's contents (rec)");
+			return rc;
+		}
+
+		// Find the child node for the key
+		PageId childPid;
+		nonLeaf.locateChildPtr(key, childPid);
+
+		// Keep going through the tree to insert at node's closer to leaf level
+		inKey = -1;
+		inPid = -1;
+		rc = insertPair(key, rid, childPid, curHeight + 1, inKey, inPid);
+
+		// If the node was split, propagate the median key to the parent
+		if (!(inKey == -1 && inPid == -1))
+		{
+			// Insert median key into nonleaf node parent
+			if ((rc = nonLeaf.insert(inKey, inPid)) == 0)
+			{
+				if ((rc = nonLeaf.write(curPid, pf)) < 0)
+				{
+					fprintf(stderr, "Error: failed to write nonleaf node's contents after insert (rec)");
+					return rc;
+				}
+
+				return rc;
+			}
+
+			// Failed to insert into nonleaf node parent due to overflow
+			// Insert and split the nonleaf node to push median key to next parent
+			BTNonLeafNode splitNonLeaf;
+			int splitKey;
+			if ((rc = nonLeaf.insertAndSplit(inKey, inPid, splitNonLeaf, splitKey)) < 0)
+			{
+				fprintf(stderr, "Error: failed to split nonleaf node (rec)");
+				return rc;
+			}
+
+			int endPid = pf.endPid();
+			inKey = splitKey;
+			inPid = endPid;
+
+			// Re-write modified nonLeaf node's contents
+			if ((rc = nonLeaf.write(curPid, pf)) < 0)
+			{
+				fprintf(stderr, "Error: failed to write nonleaf node's contents after split (rec)");
+				return rc;
+			}
+
+			// Write splitNonLeaf node's contents 
+			if ((rc = splitNonLeaf.write(endPid, pf)) < 0)
+			{
+				fprintf(stderr, "Error: failed to write split nonleaf node's contents (rec)");
+				return rc;
+			}
+
+			// Splitting a root requires a new non-leaf node 
+			// The splitNonLeaf/sibling's first value propagates up to the root
+			if (treeHeight == 1)
+			{
+				// Initialize the root with the splitKey (median key) pushed up
+				// It has two pid references to the split modes
+				BTNonLeafNode root;
+				root.initializeRoot(curPid, splitKey, endPid);
+
+				// Write the root into the rootPid page
+				rootPid = pf.endPid();
+				if ((rc = root.write(rootPid, pf)) < 0)
+				{
+					fprintf(stderr, "Error: failed to write root contents (rec)");
+					return rc;
+				}
+
+				treeHeight++;
+			}
+		}	
+	}
+
+	return rc;
+}
 /**
  * Run the standard B+Tree key search algorithm and identify the
- * leaf node where searchKey may exist. If an index entry with
  * searchKey exists in the leaf node, set IndexCursor to its location
  * (i.e., IndexCursor.pid = PageId of the leaf node, and
  * IndexCursor.eid = the searchKey index entry number.) and return 0.

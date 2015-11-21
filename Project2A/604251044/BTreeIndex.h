@@ -89,10 +89,16 @@ class BTreeIndex {
   RC readForward(IndexCursor& cursor, int& key, RecordId& rid);
 
   /*
-   * Helper functions: getters	
+   * Helper Functions: Getters	
    */
   PageId getRoot();
   int getHeight();
+
+  /*
+   * Helper Function: Recursive Insert
+   */
+
+  RC insertPair(int key, const RecordId& rid, PageId curPid, int curHeight, int& inKey, PageId& inPid);
 
   
  private:
