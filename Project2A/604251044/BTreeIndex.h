@@ -99,6 +99,11 @@ class BTreeIndex {
    */
 
   RC insertPair(int key, const RecordId& rid, PageId curPid, int curHeight, int& inKey, PageId& inPid);
+  
+  /*
+   * Helper Function: Print
+   */
+   void print();
 
   
  private:
