@@ -460,3 +460,51 @@ int BTreeIndex::getHeight()
 {
 	return treeHeight;
 }
+
+void BTreeIndex::print()
+{
+	if (treeHeight = 1)
+	{
+		BTLeafNode leafRoot;
+		leafRoot.read(rootPid, pf);
+		leafRoot.print();
+	}
+
+	else if (treeHeight > 1)
+	{
+		BTNonLeafNode root;
+		root.read(rootPid, pf);
+		root.print();
+
+		PageId zero, remaining;
+		memcpy(&zero, root.buffer, sizeof(PageId));
+		BTLeafNode leafZero, leaf;
+		leafZero.read(zero, pf);
+		leafZero.print();
+		
+		// Loop through remaining leaf nodes
+		for(int i = 0; i < root.getKeyCount(); i++)
+		{
+			memcpy(&remaining, root.buffer+12+(8*i), sizeof(PageId));
+			leaf.read(remaining, pf);
+			leaf.print();
+		}
+		
+		// Loop through leaf nodes and print pid and next pid
+		cout << "---------------" << endl;
+		
+		for(int i = 0; i < root.getKeyCount(); i++)
+		{
+			if(i == 0)
+				cout << "leaf 0 pid = " << zero << ", getNextNodePtr = " << leafZero.getNextNodePtr() << endl;
+		
+			BTLeafNode tleaf;
+			PageId tpid;
+			memcpy(&tpid, root.buffer+12+(8*i), sizeof(PageId));
+		
+			tleaf.read(tpid, pf);;
+			
+			cout << "leaf " << i + 1 << " pid = " << tpid << ", getNextNodePtr = " << tleaf.getNextNodePtr() << endl;
+		}
+	}	
+}
