@@ -41,7 +41,7 @@ RC BTreeIndex::open(const string& indexname, char mode)
 	// Open the PageFile
 	if ((rc = pf.open(indexname, mode)) < 0)
 	{
-		fprintf(stderr, "Error: failed in opening index file in read/write mode");
+		//fprintf(stderr, "Error: failed in opening index file in read/write mode");
 		return rc;
 	}
 
@@ -92,10 +92,10 @@ RC BTreeIndex::close()
 
 	// Save information related to rootPid and treeHeight in Page 0
 	memcpy(buffer, &rootPid, sizeof(int));
-	memcpy(buffer, &treeHeight, sizeof(int));
+	memcpy(buffer + 4, &treeHeight, sizeof(int));
 	if ((rc = pf.write(0, buffer)) < 0)
 	{
-		fprintf(stderr, "Error: failed in writing root/height metadata to disk");
+		//fprintf(stderr, "Error: failed in writing root/height metadata to disk");
 		return rc;
 	}
 	
@@ -387,12 +387,14 @@ RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 	if ((rc = leafNode.locate(searchKey, eid)) < 0)
 	{
 		fprintf(stderr, "Error: failed to locate the searchKey in the leaf node");
-
+		
+		
 		// Set the IndexCursor to proper fields
 		// (index entry immediately after the largest index key that is smaller than searchKey and current pid)
 		cursor.eid = eid;
 		cursor.pid = nextChild;
-
+		
+	
 		return rc;
 	}
 

@@ -175,7 +175,7 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 	{
 		// Clear sibling before adding the other half of the keys into it
 		memset(sibling.buffer, 0, sizeof(sibling.buffer));
-		cout << sibling.buffer << endl;
+		// cout << sibling.buffer << endl;
 
 		// Find the number of half keys and the position to split the the node in two
 		int halfKeys = ((int)((getKeyCount() + 1) / 2));
@@ -236,13 +236,13 @@ RC BTLeafNode::locate(int searchKey, int& eid)
 	{
 		int nKey;
 		memcpy(&nKey, tempBuffer, sizeof(int));
-		if (nKey == searchKey)
+		if (nKey >= searchKey) // == before
 		{
 			// if searchKey exists, then set the eid to the index entry of the searchKey
 			eid = n / kvPairSize;
 			rc = 0;
 
-			break;
+			return rc; // break before
 		}
 		else if (nKey > searchKey)
 		{
@@ -254,15 +254,15 @@ RC BTLeafNode::locate(int searchKey, int& eid)
 
 		tempBuffer += kvPairSize;
 	}
-
+	/*
 	// All of the keys were less than the search key so set eid to the last index entry of the buffer
 	if (n == getKeyCount())
 	{
 		eid = (n - 1) / kvPairSize;
 		rc = RC_NO_SUCH_RECORD;
-	}
-
-	return rc;
+	}*/
+	eid = getKeyCount(); 
+	return 0; // return rc before
 }
 
 /*
@@ -539,9 +539,9 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 		memcpy(&lastFHKey, buffer + halfPos - 8, sizeof(int));
 		memcpy(&firstSHKey, buffer + halfPos, sizeof(int));
 
-		cout << lastFHKey << endl;
-		cout << firstSHKey << endl;
-		print();
+		//cout << lastFHKey << endl;
+		//cout << firstSHKey << endl;
+		//print();
 
 		// First second half key is the middle key
 		if (key > firstSHKey)
@@ -634,7 +634,7 @@ RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
 	{
 		int nKey;
 		memcpy(&nKey, tempBuffer, sizeof(int));
-		if (n == 8 && nKey > searchKey)
+		if (n == 4 && nKey > searchKey) // n == 8
 		{
 			// searchKey is less than the first key so return first pid in first four bytes
 			memcpy(&pid, buffer, sizeof(PageId));
