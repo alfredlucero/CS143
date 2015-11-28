@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 
 using namespace std;
 
@@ -463,13 +464,12 @@ int BTreeIndex::getHeight()
 
 void BTreeIndex::print()
 {
-	if (treeHeight = 1)
+	if (treeHeight == 1)
 	{
 		BTLeafNode leafRoot;
 		leafRoot.read(rootPid, pf);
 		leafRoot.print();
 	}
-
 	else if (treeHeight > 1)
 	{
 		BTNonLeafNode root;
@@ -478,33 +478,36 @@ void BTreeIndex::print()
 
 		PageId zero, remaining;
 		memcpy(&zero, root.buffer, sizeof(PageId));
+		cout << zero << endl; // first four bytes of nonleaf root is pid0 less than median key pushed up from leaf overflow
 		BTLeafNode leafZero, leaf;
 		leafZero.read(zero, pf);
 		leafZero.print();
-		
+	
 		// Loop through remaining leaf nodes
-		for(int i = 0; i < root.getKeyCount(); i++)
+		for(int i = 4; i < root.getKeyCount()*8; i += 8)
 		{
-			memcpy(&remaining, root.buffer+12+(8*i), sizeof(PageId));
+			// pid1 (greater than or equal to median key pushed up) begins at position 8 (pid0,key1,pid1,...) each entity is 4 bytes
+			memcpy(&remaining, root.buffer + i + 4, sizeof(PageId));
+			cout << remaining << endl;
 			leaf.read(remaining, pf);
 			leaf.print();
 		}
 		
 		// Loop through leaf nodes and print pid and next pid
 		cout << "---------------" << endl;
-		
-		for(int i = 0; i < root.getKeyCount(); i++)
+		cout << "leaf 0 pid = " << zero << ", getNextNodePtr = " << leafZero.getNextNodePtr() << endl;
+		int leafNum = 1;
+		for(int i = 4; i < root.getKeyCount()*8; i += 8)
 		{
-			if(i == 0)
-				cout << "leaf 0 pid = " << zero << ", getNextNodePtr = " << leafZero.getNextNodePtr() << endl;
-		
 			BTLeafNode tleaf;
 			PageId tpid;
-			memcpy(&tpid, root.buffer+12+(8*i), sizeof(PageId));
-		
+			memcpy(&tpid, root.buffer + i + 4, sizeof(PageId));
+			cout << tpid << endl;
 			tleaf.read(tpid, pf);;
 			
-			cout << "leaf " << i + 1 << " pid = " << tpid << ", getNextNodePtr = " << tleaf.getNextNodePtr() << endl;
+			cout << "leaf " << leafNum << " pid = " << tpid << ", getNextNodePtr = " << tleaf.getNextNodePtr() << endl;
+			leafNum++;
 		}
+		
 	}	
 }
