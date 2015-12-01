@@ -457,7 +457,7 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 
 			linecount++;
 		}
-
+		//bTree.print();
 		// Close index tree file
 		bTree.close();
 	}

@@ -54,7 +54,7 @@ RC BTreeIndex::open(const string& indexname, char mode)
 
 		if ((rc = pf.write(0, buffer)) < 0)
 		{
-			fprintf(stderr, "Error: failed to write to index file");
+			//fprintf(stderr, "Error: failed to write to index file");
 			return rc;
 		}
 
@@ -64,7 +64,7 @@ RC BTreeIndex::open(const string& indexname, char mode)
 	// Read in metadata saved in page 0
 	if ((rc = pf.read(0, buffer)) < 0)
 	{
-		fprintf(stderr, "Error: failed to load page 0 metadata");
+		//fprintf(stderr, "Error: failed to load page 0 metadata");
 		return rc;
 	}
 
@@ -104,7 +104,7 @@ RC BTreeIndex::close()
 	// Close the index file
 	if ((rc = pf.close()) < 0)
 	{
-		fprintf(stderr, "Error: failed to close the index file");
+		//fprintf(stderr, "Error: failed to close the index file");
 	}
 
 	return rc;
@@ -127,7 +127,7 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 		BTLeafNode rootTree;
 		if ((rc = rootTree.insert(key, rid)) < 0)
 		{
-			fprintf(stderr, "Error: failed to insert into root leaf node");
+			//fprintf(stderr, "Error: failed to insert into root leaf node");
 			return rc;
 		}
 		
@@ -143,7 +143,7 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 		// Write the tree into the pid of the PageFile
 		if ((rc = rootTree.write(rootPid, pf)) < 0)
 		{
-			fprintf(stderr, "Error: failed to write new tree");
+			//fprintf(stderr, "Error: failed to write new tree");
 		}
 
 		return rc;
@@ -155,7 +155,7 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 	PageId inPid;
 	if ((rc = insertPair(key, rid, rootPid, 1, inKey, inPid)) < 0)
 	{
-		fprintf(stderr, "Error: failed to insert pair into leaf node");
+		//fprintf(stderr, "Error: failed to insert pair into leaf node");
 	}
 
 	return rc;
@@ -175,7 +175,7 @@ RC BTreeIndex::insertPair(int key, const RecordId& rid, PageId curPid, int curHe
 		BTLeafNode curLeaf;
 		if ((rc = curLeaf.read(curPid, pf)) < 0)
 		{
-			fprintf(stderr, "Error: failed to read contents into leaf node (rec)");
+			//fprintf(stderr, "Error: failed to read contents into leaf node (rec)");
 			return rc;
 		}
 
@@ -184,7 +184,7 @@ RC BTreeIndex::insertPair(int key, const RecordId& rid, PageId curPid, int curHe
 		{
 			if ((rc = curLeaf.write(curPid, pf)) < 0)
 			{
-				fprintf(stderr, "Error: failed to write into leaf node (rec)");
+				//fprintf(stderr, "Error: failed to write into leaf node (rec)");
 				return rc;
 			}
 
@@ -196,7 +196,7 @@ RC BTreeIndex::insertPair(int key, const RecordId& rid, PageId curPid, int curHe
 		int splitKey;
 		if ((rc = curLeaf.insertAndSplit(key, rid, splitLeaf, splitKey)) < 0)
 		{
-			fprintf(stderr, "Error: failed to insert and split the leaf node (rec)");
+			//fprintf(stderr, "Error: failed to insert and split the leaf node (rec)");
 			return rc;
 		}
 
@@ -211,14 +211,14 @@ RC BTreeIndex::insertPair(int key, const RecordId& rid, PageId curPid, int curHe
 		// Write the splitLeaf's contents into the last pid area
 		if ((rc = splitLeaf.write(endPid, pf)) < 0)
 		{
-			fprintf(stderr, "Error: failed to write split leaf's contents (rec)");
+			//fprintf(stderr, "Error: failed to write split leaf's contents (rec)");
 			return rc;
 		}
 
 		// Re-write the curLeaf's modified contents into its pid
 		if ((rc = curLeaf.write(curPid, pf)) < 0)
 		{
-			fprintf(stderr, "Error: failed to re-write current leaf's contents (rec)");
+			//fprintf(stderr, "Error: failed to re-write current leaf's contents (rec)");
 			return rc;
 		}
 
@@ -235,7 +235,7 @@ RC BTreeIndex::insertPair(int key, const RecordId& rid, PageId curPid, int curHe
 			rootPid = pf.endPid();
 			if ((rc = root.write(rootPid, pf)) < 0)
 			{
-				fprintf(stderr, "Error: failed to write root contents (rec)");
+				//fprintf(stderr, "Error: failed to write root contents (rec)");
 				return rc;
 			}
 			
@@ -249,7 +249,7 @@ RC BTreeIndex::insertPair(int key, const RecordId& rid, PageId curPid, int curHe
 		BTNonLeafNode nonLeaf;
 		if ((rc = nonLeaf.read(curPid, pf)) < 0)
 		{
-			fprintf(stderr, "Error: failed to read nonleaf node's contents (rec)");
+			//fprintf(stderr, "Error: failed to read nonleaf node's contents (rec)");
 			return rc;
 		}
 
@@ -270,7 +270,7 @@ RC BTreeIndex::insertPair(int key, const RecordId& rid, PageId curPid, int curHe
 			{
 				if ((rc = nonLeaf.write(curPid, pf)) < 0)
 				{
-					fprintf(stderr, "Error: failed to write nonleaf node's contents after insert (rec)");
+					//fprintf(stderr, "Error: failed to write nonleaf node's contents after insert (rec)");
 					return rc;
 				}
 
@@ -283,7 +283,7 @@ RC BTreeIndex::insertPair(int key, const RecordId& rid, PageId curPid, int curHe
 			int splitKey;
 			if ((rc = nonLeaf.insertAndSplit(inKey, inPid, splitNonLeaf, splitKey)) < 0)
 			{
-				fprintf(stderr, "Error: failed to split nonleaf node (rec)");
+				//fprintf(stderr, "Error: failed to split nonleaf node (rec)");
 				return rc;
 			}
 
@@ -294,14 +294,14 @@ RC BTreeIndex::insertPair(int key, const RecordId& rid, PageId curPid, int curHe
 			// Re-write modified nonLeaf node's contents
 			if ((rc = nonLeaf.write(curPid, pf)) < 0)
 			{
-				fprintf(stderr, "Error: failed to write nonleaf node's contents after split (rec)");
+				//fprintf(stderr, "Error: failed to write nonleaf node's contents after split (rec)");
 				return rc;
 			}
 
 			// Write splitNonLeaf node's contents 
 			if ((rc = splitNonLeaf.write(endPid, pf)) < 0)
 			{
-				fprintf(stderr, "Error: failed to write split nonleaf node's contents (rec)");
+				//fprintf(stderr, "Error: failed to write split nonleaf node's contents (rec)");
 				return rc;
 			}
 
@@ -318,7 +318,7 @@ RC BTreeIndex::insertPair(int key, const RecordId& rid, PageId curPid, int curHe
 				rootPid = pf.endPid();
 				if ((rc = root.write(rootPid, pf)) < 0)
 				{
-					fprintf(stderr, "Error: failed to write root contents (rec)");
+					//fprintf(stderr, "Error: failed to write root contents (rec)");
 					return rc;
 				}
 
@@ -361,14 +361,14 @@ RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 		// Read in nonleaf node data
 		if ((rc = nonLeafNode.read(nextChild, pf)) < 0)
 		{
-			fprintf(stderr, "Error: failed to read in nonleaf node data");
+			//fprintf(stderr, "Error: failed to read in nonleaf node data");
 			return rc;
 		}
 
 		// Traverse down to the next level/child based on searchKey
 		if ((rc = nonLeafNode.locateChildPtr(searchKey, nextChild)) < 0)
 		{
-			fprintf(stderr, "Error: failed to locate next child");
+			//fprintf(stderr, "Error: failed to locate next child");
 			return rc;
 		}
 
@@ -379,7 +379,7 @@ RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 	// First, read in the leaf node data
 	if ((rc = leafNode.read(nextChild, pf)) < 0)
 	{
-		fprintf(stderr, "Error: failed to read in leaf node data");
+		//fprintf(stderr, "Error: failed to read in leaf node data");
 		return rc;
 	}
 
@@ -387,7 +387,7 @@ RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 	int eid;
 	if ((rc = leafNode.locate(searchKey, eid)) < 0)
 	{
-		fprintf(stderr, "Error: failed to locate the searchKey in the leaf node");
+		//fprintf(stderr, "Error: failed to locate the searchKey in the leaf node");
 		
 		
 		// Set the IndexCursor to proper fields
@@ -422,14 +422,14 @@ RC BTreeIndex::readForward(IndexCursor& cursor, int& key, RecordId& rid)
 	// Read in data from the leaf node
 	if ((rc = leafNode.read(cursor.pid, pf)) < 0)
 	{
-		fprintf(stderr, "Error: failed to read in leaf node data");
+		//fprintf(stderr, "Error: failed to read in leaf node data");
 		return rc;
 	}
 
 	// Read in key-rid pair from eid value
 	if ((rc = leafNode.readEntry(cursor.eid, key, rid)) < 0)
 	{
-		fprintf(stderr, "Error: failed to read in key-rid pair from eid");
+		//fprintf(stderr, "Error: failed to read in key-rid pair from eid");
 		return rc;
 	}
 
@@ -464,6 +464,7 @@ int BTreeIndex::getHeight()
 
 void BTreeIndex::print()
 {
+	/*
 	if (treeHeight == 1)
 	{
 		BTLeafNode leafRoot;
@@ -509,5 +510,6 @@ void BTreeIndex::print()
 			leafNum++;
 		}
 		
-	}	
+	}
+	*/
 }
